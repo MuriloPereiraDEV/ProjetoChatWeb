@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chat Web</title>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+        
+        <link rel="stylesheet" href="estilo.css">
+        
+        <script type="text/javascript" src="script/server.js"></script>
+        <script type="text/javascript" src="script/jquery.js"></script>
+
+    </head>
+    <body>
+        <form id="chat">
+            <h1>Login de Usuário</h1>
+            <input type="text" name="username" placeholder="Digite seu usuário">
+            <div class="nomes"></div>
+            <button type="submit">Entrar</button>
+        </form>
+
+        <script type="text/javascript">
+            var socket = io('http://localhost:5050');
+
+            //No momento que o usuário entrar com o nome e clicar no botão entrar ele fará uma validação 
+            //se esse nome pode ser usado.
+            $('#chat').submit(function(event){
+                event.preventDefault();
+
+                var autor = $('input[name=username]').val();
+                //Manda o nome para fazer validação e cadastrar se estiver tudo correto.
+                 socket.emit('cadastraNome', autor);
+            });
+
+            //Quando no nome for repetido ele mostrará um alerta na tela do usuário pedindo outra entrada.
+            socket.on('nomeRepetido', data =>{
+                    alert('NOME INVALIDO. Este nome já está sendo utilizado ou você deixou o campo em branco, por favor insira outro novamente para entrar no chat!');
+                });
+            
+            //Entra na proxima página, a do chat.
+            socket.on('entraChat', data => {
+                window.location.href='chat.html';
+            });
+        </script>
+    </body>
+</html>

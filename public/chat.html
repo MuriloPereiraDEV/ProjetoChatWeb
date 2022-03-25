@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chat Geral</title>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+
+        <link rel="stylesheet" href="estilo.css">
+    </head>
+    <body>
+        <form id="chat">
+            <h1 style="color:blue">CHAT GERAL</h1>
+            <div class="messages"></div>
+            <input type="text" name="message" placeholder="Digite sua mensagem">
+            <button type="submit">Enviar</button>
+            <input type="button" onclick="logout()" value="Logout"/>
+        </form>
+
+        <script type="text/javascript">
+
+            var socket = io('http://localhost:5050');
+
+            //Renderiza a mensagem enviada no chat.
+            function renderMessage(mensagem){
+                $('.messages').append('<div class="message"><strong>' + mensagem.horaAtual + mensagem.autor + '</strong>: ' + mensagem.mensagem + '</div>');
+            }
+
+            //Mostra todas as mensagens já enviadas no chat e joga no renderMensagem para mostrar
+            //para quem entrou depois.
+            socket.on('previousMessages', function(mensagens){
+                for (mensagem of mensagens){
+                    renderMessage(mensagem);
+                }
+            });
+
+            //Recebe a mensagem e chama o renderMensagem para mmostrala.
+            socket.on('receivedMessage', function(mensagem){
+                renderMessage(mensagem);
+            });
+
+            var autor;
+            socket.on('pegaNome', data =>{
+                autor=data;
+            });
+
+            //No momento que o usuário clicar em Enviar tudo que que ele escreveu na caixa de diálogo
+            //será pego, concatenado com seu nome e horario e enviado para o renderMensagem mostar no chat.
+            $('#chat').submit(function(event){
+                event.preventDefault();
+
+                var hora = new Date();
+                var horas = hora.getHours();
+                var minutos = hora.getMinutes();
+                var horaAtual = horas + ":" + minutos + "h => ";
+                var mensagem = $('input[name=message]').val();
+
+                if(autor.length && mensagem.length && horaAtual.length){
+                    
+                    //Cria um objeto que contem mensagem, autor e horário de envio, facilitando no envio
+                    //de informação e deixando mais organizado.
+                    var messageObject = {
+                        horaAtual: horaAtual,
+                        autor: autor,
+                        mensagem: mensagem,
+                    };
+
+                    renderMessage(messageObject);
+                    //Envia a mensagem em forma de objeto.
+                    socket.emit('sendMessage', messageObject);
+                }
+            });
+
+            //Quando alguem quiser sair do chat terá o nome excluido do vetor e nomes 
+            //e voltará para a tela de inicio.
+            function logout(){
+                socket.emit('excluiNome', autor);
+                window.location.href='telalogin.html';
+            }
+        </script>
+    </body>
+</html>
